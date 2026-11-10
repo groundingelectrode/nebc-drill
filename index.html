@@ -1,0 +1,217 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NE-BC Drill</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: one narrow column, phone-first — a chart-board header, then one question card at a time */
+:root{
+  --bg:#f3f6f7; --surface:#ffffff; --ink:#14232b; --muted:#5a6b73; --line:#d6e0e3;
+  --accent:#0f6e7a; --accent-ink:#ffffff; --soft:#e2f0f1;
+  --good:#1f7a45; --good-soft:#e3f3e8; --bad:#b23a3a; --bad-soft:#f8e4e3;
+  --hr:#7a4fb0; --qs:#c0562b; --bm:#2f6fb5; --hcd:#2b8a5e;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f171b; --surface:#18242a; --ink:#e6eef0; --muted:#97a9b0; --line:#2a3a41;
+  --accent:#4cb7c3; --accent-ink:#0c1a1e; --soft:#1d3238;
+  --good:#5cc58a; --good-soft:#163323; --bad:#ef7d7a; --bad-soft:#3a1e1e;
+  --hr:#b394e0; --qs:#ee9068; --bm:#7fb0ea; --hcd:#6fd0a2; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0f171b; --surface:#18242a; --ink:#e6eef0; --muted:#97a9b0; --line:#2a3a41;
+  --accent:#4cb7c3; --accent-ink:#0c1a1e; --soft:#1d3238;
+  --good:#5cc58a; --good-soft:#163323; --bad:#ef7d7a; --bad-soft:#3a1e1e;
+  --hr:#b394e0; --qs:#ee9068; --bm:#7fb0ea; --hcd:#6fd0a2; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1.05;margin:0;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:4px 0 0;font-size:.95rem}
+.eyebrow{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.dom{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.dom .name{font-weight:700;font-size:.92rem;line-height:1.2}
+.dom .stat{font-family:var(--display);font-weight:600;font-size:1.35rem;font-variant-numeric:tabular-nums}
+.dom .stat small{font-family:var(--body);font-size:.8rem;color:var(--muted);font-weight:400}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0}
+.pill{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:99px;border:1px solid currentColor;width:max-content}
+.modes{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-weight:600}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:focus-visible,.opt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn:disabled{opacity:.45;cursor:default}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.count{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem}
+.stem{font-size:1.08rem;font-weight:600;margin:0}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
+.opt b{font-family:var(--display);min-width:1.2em}
+.opt.right{background:var(--good-soft);border-color:var(--good)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.opt[disabled]{cursor:default}
+.why{background:var(--soft);border-radius:10px;padding:12px 14px;font-size:.97rem}
+.why strong{display:block;margin-bottom:2px}
+.hook{color:var(--muted);font-size:.9rem;margin-top:6px}
+.done{text-align:center;align-items:center}
+.big{font-family:var(--display);font-weight:800;font-size:3rem;line-height:1;font-variant-numeric:tabular-nums}
+.foot{color:var(--muted);font-size:.85rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .4s ease}}
+</style>
+</head><body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Nurse Executive · Board Certified</div>
+    <h1>NE-BC Drill</h1>
+    <p class="sub">Scenario questions across the four domains of the October 2025 outline. Pick the best answer, then read why.</p>
+  </header>
+
+  <section aria-label="Progress by domain">
+    <div class="board" id="board"></div>
+  </section>
+
+  <section class="modes" aria-label="Choose a set">
+    <button class="btn primary" id="m-mix">Mixed 10</button>
+    <button class="btn" data-dom="HR">Human Resources</button>
+    <button class="btn" data-dom="QS">Quality &amp; Safety</button>
+    <button class="btn" data-dom="BM">Business Mgmt</button>
+    <button class="btn" data-dom="HCD">Care Delivery</button>
+    <button class="btn" id="m-miss">Missed ones</button>
+  </section>
+
+  <main id="stage"></main>
+
+  <p class="foot">Original practice questions, not ANCC items. Progress is saved on this device only. <button class="btn" id="reset" style="padding:4px 10px;font-size:.85rem">Reset progress</button> <span id="confirm" hidden> Sure? <button class="btn" id="reset-yes" style="padding:4px 10px;font-size:.85rem">Yes, reset</button></span></p>
+</div>
+
+<script>
+const DOMAINS={HR:{name:"Human Resource Mgmt",color:"var(--hr)"},QS:{name:"Quality & Safety",color:"var(--qs)"},BM:{name:"Business Mgmt",color:"var(--bm)"},HCD:{name:"Health Care Delivery",color:"var(--hcd)"}};
+
+const Q=[
+// ---------- Human Resource Management ----------
+{d:"HR",q:"A staff nurse gives the wrong dose after a pump library error. She reported it immediately. Under a just culture model, the manager's first step is to:",o:["Issue a written warning to document the error","Console the nurse and look at the system that allowed the error","Require remedial pump training before her next shift","Report her to the board of nursing"],a:1,w:"Just culture separates human error (console), at-risk behavior (coach) and reckless behavior (discipline). An honest slip caused by a system flaw calls for consoling and fixing the system.",h:"Human error → console. At-risk → coach. Reckless → sanction."},
+{d:"HR",q:"Two charge nurses keep clashing over break coverage. The manager wants a solution both can fully support. Which conflict approach fits best?",o:["Avoiding","Compromising","Collaborating","Competing"],a:2,w:"Collaborating aims for a win-win that meets both parties' needs. Compromising splits the difference so each gives something up. It takes longer but fits a recurring issue between peers.",h:"Collaborate = both win. Compromise = both lose a little."},
+{d:"HR",q:"Staff say they like their pay and schedules but feel no sense of accomplishment. According to Herzberg, the manager should focus on:",o:["Hygiene factors such as salary","Motivators such as recognition and growth","Stricter attendance policies","Improving the break room"],a:1,w:"Herzberg's hygiene factors (pay, policy, conditions) prevent dissatisfaction but don't motivate. Motivators like achievement, recognition, responsibility and growth drive satisfaction.",h:"Hygiene keeps them from leaving. Motivators make them want to stay."},
+{d:"HR",q:"A new graduate can follow protocols but struggles to prioritize when the unit gets busy. On Benner's scale she is most likely:",o:["Novice","Advanced beginner","Competent","Proficient"],a:1,w:"Advanced beginners can handle recurring situations with guidance but can't yet see the big picture or prioritize well. Competent nurses (usually 2–3 years) plan deliberately and set priorities.",h:"Novice → Advanced beginner → Competent → Proficient → Expert."},
+{d:"HR",q:"Which leadership style is most associated with inspiring staff around a shared vision and developing them as individuals?",o:["Transactional","Laissez-faire","Transformational","Autocratic"],a:2,w:"Transformational leaders use idealized influence, inspirational motivation, intellectual stimulation and individualized consideration. It's the style ANCC Magnet language centers on.",h:"Transformational = vision + growth. Transactional = rewards for tasks."},
+{d:"HR",q:"The unit is launching bedside shift report. Using Lewin's change theory, the manager's first step is to:",o:["Train all staff on the new process","Help staff see why the current handoff isn't working","Make the new process policy","Audit compliance weekly"],a:1,w:"Lewin's stages are unfreeze, move (change) and refreeze. Unfreezing creates readiness by showing the need for change, often with data such as handoff-related events.",h:"Unfreeze (why) → Change (how) → Refreeze (stick)."},
+{d:"HR",q:"Turnover of experienced RNs has climbed. Which action gives the manager the most useful information before people leave?",o:["Exit interviews","Stay interviews","Raising sign-on bonuses","Annual engagement survey only"],a:1,w:"Stay interviews ask current staff what keeps them and what might make them leave, so the manager can act early. Exit interviews only explain departures after the fact.",h:"Stay interviews are proactive. Exit interviews are an autopsy."},
+{d:"HR",q:"A nurse has been late six times this quarter despite a verbal warning. The next step in progressive discipline is:",o:["Termination","A written warning with clear expectations","Ignoring it if patient care isn't affected","Transferring her to another unit"],a:1,w:"Progressive discipline usually moves from verbal warning to written warning, then suspension, then termination. Each step documents the expectation and consequence.",h:"Verbal → Written → Suspension → Termination."},
+{d:"HR",q:"When delegating a task to a UAP, which right is the RN NOT allowed to hand off?",o:["Right task","Right supervision","Accountability for the overall outcome","Right communication"],a:2,w:"The RN can delegate the task but keeps accountability for delegation decisions and the patient outcome. The five rights are task, circumstance, person, directions/communication and supervision/evaluation.",h:"You can delegate tasks, never accountability."},
+{d:"HR",q:"A manager tells an experienced, motivated team the goal and lets them decide how to reach it. In Hersey-Blanchard situational leadership this is:",o:["Telling","Selling","Participating","Delegating"],a:3,w:"Delegating (low task, low relationship behavior) fits followers who are both able and willing. Telling fits low ability and low willingness.",h:"Match style to readiness: Tell → Sell → Participate → Delegate."},
+{d:"HR",q:"Which structure puts staff nurses in formal decision-making over practice standards on their unit?",o:["Centralized hierarchy","Shared governance","Span of control","Chain of command"],a:1,w:"Shared governance gives clinical nurses authority and accountability for practice decisions through councils. It's a core expectation in Magnet's structural empowerment component.",h:"Shared governance = the people who do the work help decide the work."},
+{d:"HR",q:"A nurse returning from a long medical leave asks for a modified schedule. Before deciding, the manager should first:",o:["Deny it to stay fair to other staff","Consult HR about accommodation obligations","Approve it informally without documentation","Ask other staff to vote on it"],a:1,w:"Leave and accommodation requests carry legal duties (for example under the ADA and FMLA). The manager should work with HR to handle it correctly and consistently.",h:"Legal question on a staff request? Loop in HR first."},
+{d:"HR",q:"Kotter's model of change begins with:",o:["Creating a sense of urgency","Generating short-term wins","Anchoring changes in culture","Removing obstacles"],a:0,w:"Kotter's eight steps start with urgency, then a guiding coalition and a vision. Short-term wins and anchoring in culture come near the end.",h:"Kotter starts with urgency and ends with culture."},
+// ---------- Quality & Safety ----------
+{d:"QS",q:"A patient dies from an unexpected wrong-site procedure. The Joint Commission expects the organization to complete:",o:["A FMEA","A root cause analysis","A Pareto chart","A peer review only"],a:1,w:"A sentinel event requires a comprehensive systematic analysis, usually a root cause analysis with an action plan. FMEA is proactive and done before harm occurs.",h:"RCA looks back after harm. FMEA looks ahead before it."},
+{d:"QS",q:"Before rolling out a new smart-pump system, the team wants to find where it could fail. The best tool is:",o:["Root cause analysis","Failure mode and effects analysis","Run chart","Fishbone after go-live"],a:1,w:"FMEA is prospective. It maps the process, identifies failure modes, and ranks them by severity, occurrence and detectability so the riskiest get fixed first.",h:"New process or equipment → FMEA."},
+{d:"QS",q:"The unit tests a new fall-prevention bundle on one shift for two weeks, studies the data, then adjusts. This is:",o:["Six Sigma DMAIC","Lean value stream mapping","PDSA cycle","Benchmarking"],a:2,w:"Plan-Do-Study-Act uses small, rapid tests of change before spreading them. Starting on one shift is a classic small test.",h:"PDSA = test small, learn fast, then spread."},
+{d:"QS",q:"Which chart helps the team focus on the few causes behind most medication errors?",o:["Control chart","Pareto chart","Scatter diagram","Gantt chart"],a:1,w:"A Pareto chart ranks causes by frequency so the team can attack the vital few (the 80/20 rule).",h:"Pareto = 80% of the problem from 20% of the causes."},
+{d:"QS",q:"A manager wants to know whether this month's CLABSI rise is real or normal variation. The best tool is:",o:["Control chart","Histogram","Flowchart","Pareto chart"],a:0,w:"A control chart shows data over time against statistically set upper and lower limits, separating common-cause from special-cause variation.",h:"Control chart = is this signal or noise?"},
+{d:"QS",q:"A nurse catches a wrong medication before it reaches the patient. The best response is to:",o:["Skip reporting since no harm occurred","Report it as a near miss","Report only if it happens again","Tell the pharmacist informally"],a:1,w:"Near misses show where the system's defenses are weak. High-reliability organizations encourage reporting them so problems get fixed before harm happens.",h:"Near misses are free lessons. Report them."},
+{d:"QS",q:"'Preoccupation with failure' and 'deference to expertise' are principles of:",o:["Lean management","High reliability organizations","Total quality management","Magnet designation"],a:1,w:"Weick and Sutcliffe's five HRO principles are preoccupation with failure, reluctance to simplify, sensitivity to operations, commitment to resilience and deference to expertise.",h:"HRO: always expect something could go wrong."},
+{d:"QS",q:"Which communication tool is designed to give a physician a structured, concise report on a deteriorating patient?",o:["SBAR","Teach-back","Huddle","Time-out"],a:0,w:"SBAR (Situation, Background, Assessment, Recommendation) standardizes urgent clinician-to-clinician communication. It came from the military and was adapted in health care.",h:"SBAR ends with what you want: the Recommendation."},
+{d:"QS",q:"The national nursing database that lets a unit compare its falls and pressure injuries with similar units is:",o:["HCAHPS","NDNQI","Leapfrog","CMS Star Ratings"],a:1,w:"The National Database of Nursing Quality Indicators collects nurse-sensitive measures at the unit level for benchmarking. HCAHPS measures the patient experience.",h:"NDNQI = nurse-sensitive, unit-level benchmarks."},
+{d:"QS",q:"Reason's 'Swiss cheese' model explains that adverse events usually result from:",o:["One individual's mistake","Holes in several layers of defense lining up","Poor patient compliance","Equipment failure alone"],a:1,w:"Each layer of defense has weaknesses. Harm happens when the holes align, so the fix is strengthening layers rather than blaming one person.",h:"Harm gets through when the holes line up."},
+{d:"QS",q:"CMS no longer pays hospitals extra for certain conditions acquired during the stay, such as a stage 3 pressure injury. These are called:",o:["Core measures","Hospital-acquired conditions","Sentinel events","Quality indicators"],a:1,w:"Under the HAC policy CMS doesn't pay the higher DRG for selected preventable conditions acquired in the hospital. A separate HAC Reduction Program penalizes the worst-performing hospitals.",h:"HACs: the hospital caused it, so the hospital pays."},
+// ---------- Business Management ----------
+{d:"BM",q:"A unit has an average daily census of 20 and a target of 8 nursing hours per patient day. How many nursing hours are needed per day?",o:["28","120","160","200"],a:2,w:"Required hours = census × HPPD = 20 × 8 = 160 hours per 24 hours.",h:"Census × HPPD = hours needed."},
+{d:"BM",q:"How many paid hours per year does one full-time equivalent (1.0 FTE) represent?",o:["1,800","1,950","2,080","2,280"],a:2,w:"1.0 FTE = 40 hours × 52 weeks = 2,080 paid hours. A 0.9 FTE is 1,872 hours.",h:"40 × 52 = 2,080."},
+{d:"BM",q:"Supplies were budgeted at $50,000 but cost $56,000. Patient volume was 15% above budget. The supply variance is best described as:",o:["Unfavorable, needing a corrective plan","Favorable once adjusted for volume","Neutral","A capital budget issue"],a:1,w:"A flexible budget adjusts for volume: $50,000 × 1.15 = $57,500 expected. Spending $56,000 is $1,500 under that, so it's favorable.",h:"Always adjust for volume before calling a variance bad."},
+{d:"BM",q:"A $250,000 bedside monitoring system that will last 7 years belongs in the:",o:["Operating budget","Capital budget","Personnel budget","Cash budget"],a:1,w:"Capital budgets cover major purchases above the organization's dollar threshold with a useful life longer than a year. The operating budget covers day-to-day revenue and expenses.",h:"Big ticket + lasts years = capital."},
+{d:"BM",q:"Which cost rises and falls directly with patient volume?",o:["Manager's salary","Building depreciation","Medical supplies","Equipment lease"],a:2,w:"Variable costs change with volume (supplies, linen, per-diem staffing). Fixed costs, like the manager's salary and depreciation, stay the same within a relevant range.",h:"More patients, more supplies: variable."},
+{d:"BM",q:"Under Medicare's Hospital Value-Based Purchasing program, payment depends partly on:",o:["Volume of procedures performed","Quality and patient experience scores","Number of licensed beds","Length of stay alone"],a:1,w:"VBP withholds a percentage of Medicare payments and redistributes it based on performance on quality, safety, efficiency and patient experience (HCAHPS) measures.",h:"Value-based = paid for outcomes, not volume."},
+{d:"BM",q:"A budget built from scratch each year, with every expense justified, is a:",o:["Incremental budget","Zero-based budget","Flexible budget","Fixed budget"],a:1,w:"Zero-based budgeting starts from zero and justifies every line. Incremental budgeting adds a percentage to last year's numbers.",h:"Zero-based = justify everything, every year."},
+{d:"BM",q:"A proposal to add a discharge nurse costs $95,000 a year and is projected to prevent readmissions worth $140,000. The ROI is about:",o:["32%","47%","68%","147%"],a:1,w:"ROI = (gain − cost) ÷ cost = (140,000 − 95,000) ÷ 95,000 ≈ 47%.",h:"ROI = net gain ÷ cost."},
+{d:"BM",q:"The unit's productivity report shows 110%. In most hospitals' measurement this means:",o:["Staff worked more hours than the workload required","The unit used fewer hours than the target for its workload","The budget was overspent by 10%","Overtime was 10% of hours"],a:1,w:"Productivity is usually target hours ÷ worked hours × 100. Over 100% means fewer hours were used than the workload called for. Check how your organization defines it, since a few flip the ratio.",h:"Productivity = earned (target) ÷ worked."},
+// ---------- Health Care Delivery ----------
+{d:"HCD",q:"A nurse asks, 'In post-op adults, does chlorhexidine bathing compared with soap reduce surgical site infections?' This question is written in which format?",o:["SBAR","PICOT","SMART","ADPIE"],a:1,w:"PICOT stands for Population, Intervention, Comparison, Outcome and Time. It frames a searchable clinical question, the first step in evidence-based practice.",h:"PICOT turns a hunch into a searchable question."},
+{d:"HCD",q:"Which level of evidence is strongest for changing practice?",o:["Expert opinion","A single cohort study","Systematic review of randomized controlled trials","Case series"],a:2,w:"Systematic reviews and meta-analyses of RCTs sit at the top of most evidence hierarchies. Expert opinion is at the bottom.",h:"Systematic review of RCTs sits on top."},
+{d:"HCD",q:"The Hospital Readmissions Reduction Program penalizes hospitals for excess 30-day readmissions. The nurse leader's highest-impact focus is:",o:["Shortening length of stay","Discharge teaching, med reconciliation and follow-up","Admitting fewer high-risk patients","Increasing observation status"],a:1,w:"Readmissions fall most with strong transitions of care: teach-back, medication reconciliation, scheduled follow-up and post-discharge calls.",h:"Readmissions are a transitions problem."},
+{d:"HCD",q:"A competent adult patient refuses a blood transfusion for religious reasons. The nurse leader supports the team in respecting:",o:["Beneficence","Autonomy","Justice","Fidelity"],a:1,w:"Autonomy is a competent person's right to make decisions about their own care, even ones the team disagrees with. The team still documents informed refusal.",h:"Competent adult says no → autonomy wins."},
+{d:"HCD",q:"What defines what an RN may legally do in a given state?",o:["The hospital's policy manual","The state nurse practice act","ANA Code of Ethics","The Joint Commission standards"],a:1,w:"Each state's nurse practice act, enforced by its board of nursing, sets the legal scope of practice. Facility policy can be narrower but can't expand it.",h:"Policy can narrow scope, never widen it."},
+{d:"HCD",q:"During a mass-casualty event, the hospital's command structure that assigns roles like incident commander and operations chief is:",o:["Hospital Incident Command System","Rapid response team","Shared governance","Chain of command policy"],a:0,w:"HICS is the hospital version of the national Incident Command System. It gives a predictable, scalable structure with defined roles during emergencies.",h:"Disaster → HICS. Know your role card."},
+{d:"HCD",q:"Which approach best addresses health equity for a unit serving many patients with limited English proficiency?",o:["Using bilingual family members to interpret","Providing qualified medical interpreters","Giving written English materials only","Relying on staff who speak some Spanish"],a:1,w:"Qualified interpreters reduce errors and are required under federal civil rights rules for facilities that receive federal funds. Family members, especially minors, shouldn't be used for clinical interpreting.",h:"Qualified interpreter, every time."},
+{d:"HCD",q:"An EHR alert recommends VTE prophylaxis based on a patient's risk score. This is an example of:",o:["Clinical decision support","Telehealth","Interoperability","Data mining"],a:0,w:"Clinical decision support gives clinicians patient-specific information or recommendations at the point of care. Alert fatigue is its main risk.",h:"CDS nudges the right action at the right time."},
+{d:"HCD",q:"The Magnet model's component that focuses on the nurse leader's vision and influence across the organization is:",o:["Structural empowerment","Transformational leadership","Exemplary professional practice","New knowledge and innovation"],a:1,w:"Magnet's five components are transformational leadership, structural empowerment, exemplary professional practice, new knowledge/innovation, and empirical outcomes.",h:"Magnet: TL, SE, EP, NK, EO."},
+{d:"HCD",q:"Interprofessional rounds where each discipline contributes to one shared plan of care mainly improve:",o:["Billing accuracy","Care coordination and communication","Physician autonomy","Nurse overtime"],a:1,w:"Structured interprofessional rounds align goals, reduce duplicated or missed work, and are linked to better outcomes and shorter stays.",h:"One patient, one plan, every discipline at the table."}
+];
+
+const KEY="nebc-drill-v1";
+let stats={}; // id -> {seen, right, lastWrong}
+try{stats=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){stats={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(stats))}catch(e){}}
+
+const stage=document.getElementById("stage");
+let set=[],idx=0,score=0,label="";
+
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function renderBoard(){
+  const b=document.getElementById("board");b.innerHTML="";
+  for(const k in DOMAINS){
+    const items=Q.map((q,i)=>({q,i})).filter(x=>x.q.d===k);
+    let seen=0,right=0;
+    items.forEach(x=>{const s=stats[x.i];if(s){seen+=s.seen;right+=s.right}});
+    const pct=seen?Math.round(right/seen*100):null;
+    const el=document.createElement("div");el.className="dom";
+    el.innerHTML=`<span class="pill" style="color:${DOMAINS[k].color}">${k}</span>
+      <span class="name">${DOMAINS[k].name}</span>
+      <span class="stat">${pct===null?"—":pct+"%"} <small>${seen?right+" of "+seen+" right":items.length+" questions"}</small></span>
+      <span class="bar"><i style="width:${pct||0}%;background:${DOMAINS[k].color}"></i></span>`;
+    b.appendChild(el);
+  }
+  const missed=Q.filter((q,i)=>stats[i]&&stats[i].lastWrong).length;
+  const mb=document.getElementById("m-miss");mb.textContent="Missed ones ("+missed+")";mb.disabled=!missed;
+}
+
+function start(list,name){set=shuffle(list).slice(0,10);idx=0;score=0;label=name;show()}
+
+function show(){
+  if(idx>=set.length)return finish();
+  const i=set[idx],q=Q[i],D=DOMAINS[q.d];
+  const order=shuffle(q.o.map((t,k)=>k));
+  stage.innerHTML=`<article class="card">
+    <div class="qhead"><span class="pill" style="color:${D.color}">${D.name}</span><span class="count">${idx+1} of ${set.length} · ${label}</span></div>
+    <p class="stem">${q.q}</p>
+    <div class="opts">${order.map((k,n)=>`<button class="opt" id="opt-${n}" data-k="${k}"><b>${"ABCD"[n]}</b><span>${q.o[k]}</span></button>`).join("")}</div>
+    <div id="after"></div></article>`;
+  stage.querySelectorAll(".opt").forEach(btn=>btn.addEventListener("click",()=>answer(i,+btn.dataset.k)));
+  stage.querySelector(".opt").focus({preventScroll:true});
+}
+
+function answer(i,k){
+  const q=Q[i],ok=k===q.a;
+  const s=stats[i]||{seen:0,right:0,lastWrong:false};
+  s.seen++;if(ok){s.right++;score++}s.lastWrong=!ok;stats[i]=s;save();
+  stage.querySelectorAll(".opt").forEach(b=>{b.disabled=true;const bk=+b.dataset.k;if(bk===q.a)b.classList.add("right");else if(bk===k)b.classList.add("wrong")});
+  document.getElementById("after").innerHTML=`<div class="why"><strong style="color:${ok?"var(--good)":"var(--bad)"}">${ok?"Correct":"Not quite"}</strong>${q.w}<div class="hook">Memory hook: ${q.h}</div></div>
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="next">${idx+1<set.length?"Next question":"See results"}</button></div>`;
+  const n=document.getElementById("next");n.addEventListener("click",()=>{idx++;show()});n.focus({preventScroll:true});
+  renderBoard();
+}
+
+function finish(){
+  const pct=Math.round(score/set.length*100);
+  const msg=pct>=80?"Strong set. Try a weaker domain next.":pct>=65?"Close to passing range. Review the misses.":"Worth another pass. Hit Missed ones next.";
+  stage.innerHTML=`<article class="card done"><span class="eyebrow">${label} complete</span><span class="big">${score}/${set.length}</span><p style="margin:0">${msg}</p>
+    <div class="row" style="justify-content:center"><button class="btn primary" id="again">Another mixed set</button></div></article>`;
+  document.getElementById("again").addEventListener("click",()=>start(Q.map((q,i)=>i),"Mixed"));
+}
+
+document.getElementById("m-mix").addEventListener("click",()=>start(Q.map((q,i)=>i),"Mixed"));
+document.querySelectorAll("[data-dom]").forEach(b=>b.addEventListener("click",()=>{const d=b.dataset.dom;start(Q.map((q,i)=>i).filter(i=>Q[i].d===d),DOMAINS[d].name)}));
+document.getElementById("m-miss").addEventListener("click",()=>start(Q.map((q,i)=>i).filter(i=>stats[i]&&stats[i].lastWrong),"Missed"));
+document.getElementById("reset").addEventListener("click",()=>{document.getElementById("confirm").hidden=false});
+document.getElementById("reset-yes").addEventListener("click",()=>{stats={};save();document.getElementById("confirm").hidden=true;renderBoard()});
+
+renderBoard();
+start(Q.map((q,i)=>i),"Mixed");
+</script>
+</body></html>

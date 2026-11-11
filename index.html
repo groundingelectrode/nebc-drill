@@ -82,7 +82,7 @@ button{font:inherit;cursor:pointer}
     <div class="toprow"><div class="eyebrow">Nurse Executive · Board Certified</div><button class="btn small" id="refresh" title="Load the latest questions">↻ Refresh</button></div>
     <h1>NE-BC Drill</h1>
     <p class="sub">Scenario questions across the four domains of the October 2025 outline. Pick the best answer, then read why.</p>
-    <p class="ver">Version: Nov 10, 2026 · 150 questions</p>
+    <p class="ver">Version: Nov 10, 2026 (b) · 150 questions</p>
   </header>
 
   <section aria-label="Progress by domain">
@@ -95,12 +95,12 @@ button{font:inherit;cursor:pointer}
   </section>
 
   <section class="modes" aria-label="Choose a set">
-    <button class="btn primary" id="m-mix">Mixed 10</button>
-    <button class="btn" data-dom="HR">Human Resources</button>
-    <button class="btn" data-dom="QS">Quality &amp; Safety</button>
-    <button class="btn" data-dom="BM">Business Mgmt</button>
-    <button class="btn" data-dom="HCD">Care Delivery</button>
-    <button class="btn" id="m-miss">Missed ones</button>
+    <button class="btn primary" id="m-mix" data-label="Mixed" aria-pressed="true">Mixed 10</button>
+    <button class="btn" data-dom="HR" data-label="Human Resource Mgmt" aria-pressed="false">Human Resources</button>
+    <button class="btn" data-dom="QS" data-label="Quality &amp; Safety" aria-pressed="false">Quality &amp; Safety</button>
+    <button class="btn" data-dom="BM" data-label="Business Mgmt" aria-pressed="false">Business Mgmt</button>
+    <button class="btn" data-dom="HCD" data-label="Health Care Delivery" aria-pressed="false">Care Delivery</button>
+    <button class="btn" id="m-miss" data-label="Missed" aria-pressed="false">Missed ones</button>
   </section>
 
   <main id="stage"></main>
@@ -307,7 +307,9 @@ function renderBoard(){
 
 function seenCount(i){return stats[i]?stats[i].seen:0}
 // Least-seen first, so every question comes up before any repeats
-function start(list,name){set=shuffle(list).sort((a,b)=>seenCount(a)-seenCount(b)).slice(0,10);idx=0;score=0;label=name;show()}
+function start(list,name){set=shuffle(list).sort((a,b)=>seenCount(a)-seenCount(b)).slice(0,10);idx=0;score=0;label=name;
+  document.querySelectorAll(".modes .btn").forEach(b=>{const on=b.dataset.label===name;b.classList.toggle("primary",on);b.setAttribute("aria-pressed",on)});
+  show()}
 
 function renderWeak(){
   const seen=Q.filter((q,i)=>seenCount(i)>0).length;

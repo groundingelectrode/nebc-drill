@@ -60,6 +60,15 @@ button{font:inherit;cursor:pointer}
 .done{text-align:center;align-items:center}
 .big{font-family:var(--display);font-weight:800;font-size:3rem;line-height:1;font-variant-numeric:tabular-nums}
 .foot{color:var(--muted);font-size:.85rem}
+.weak{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.weak h2{font-family:var(--display);font-size:1.05rem;margin:0;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
+.weak h2 span{font-family:var(--body);font-weight:400;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.wrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center}
+.wrow .tn{font-weight:600;line-height:1.25}
+.wrow .tp{font-variant-numeric:tabular-nums;font-weight:700;color:var(--bad)}
+.wrow .tp.ok{color:var(--good)}
+.wrow .btn{padding:6px 12px;font-size:.9rem}
+.wnote{color:var(--muted);font-size:.92rem;margin:0}
 .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 @media (prefers-reduced-motion:no-preference){.bar i{transition:width .4s ease}}
 </style>
@@ -74,6 +83,11 @@ button{font:inherit;cursor:pointer}
 
   <section aria-label="Progress by domain">
     <div class="board" id="board"></div>
+  </section>
+
+  <section class="weak" aria-label="Your weak spots">
+    <h2>Your weak spots <span id="seen"></span></h2>
+    <div id="weak"></div>
   </section>
 
   <section class="modes" aria-label="Choose a set">
@@ -254,6 +268,10 @@ const Q=[
 {d:"HCD",q:"A nurse calls the home health nurse and introduces her to the patient before discharge. This is called a:",o:["Warm handoff","Cold transfer","Referral form","Utilization review"],a:0,w:"A warm handoff happens in real time with the patient included, which builds trust and continuity across care transitions.",h:"Warm handoff = live introduction."}
 ];
 
+const TOPICS={LS:"Leadership, power & delegation",MOT:"Motivation theories",CHG:"Change management",JC:"Just culture",CONF:"Conflict & team dynamics",DEV:"Staff development & retention",EMP:"Employment law & HR",PERF:"Performance management",QI:"QI tools & measures",SAFE:"Patient safety practices",COMM:"Communication & patient teaching",FIN:"Budgets & finance",STAFF:"Staffing math & productivity",PAY:"Reimbursement & payment models",LEG:"Legal & regulatory",ETH:"Ethics",EBP:"Evidence-based practice & research",MOD:"Care models & org structure",POP:"Transitions, population health & equity",OPS:"Operations, informatics & emergencies"};
+const TAGS="JC CONF MOT DEV LS CHG DEV PERF LS LS MOD EMP CHG QI QI QI QI QI SAFE SAFE COMM QI SAFE PAY STAFF STAFF FIN FIN FIN PAY FIN FIN STAFF EBP EBP POP ETH LEG OPS POP OPS MOD MOD MOD EMP EMP EMP EMP EMP EMP CONF EMP LS LS MOT MOT MOT DEV DEV PERF PERF PERF DEV ETH DEV EMP DEV PERF EMP CONF CONF LS LS JC JC PERF PERF MOT QI QI QI QI QI QI SAFE SAFE SAFE SAFE SAFE COMM COMM COMM QI SAFE SAFE SAFE SAFE SAFE QI FIN FIN FIN STAFF STAFF FIN STAFF PAY PAY PAY FIN FIN FIN PAY FIN MOD MOD MOD MOD LEG LEG LEG LEG LEG LEG ETH ETH ETH ETH MOD EBP EBP CHG LEG OPS OPS POP PAY POP OPS OPS LEG LEG MOD MOD MOD ETH COMM POP COMM COMM".split(" ");
+Q.forEach((q,i)=>{q.t=TAGS[i]||"MOD"});
+
 const KEY="nebc-drill-v1";
 let stats={}; // id -> {seen, right, lastWrong}
 try{stats=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){stats={}}
@@ -279,10 +297,28 @@ function renderBoard(){
     b.appendChild(el);
   }
   const missed=Q.filter((q,i)=>stats[i]&&stats[i].lastWrong).length;
+  renderWeak();
   const mb=document.getElementById("m-miss");mb.textContent="Missed ones ("+missed+")";mb.disabled=!missed;
 }
 
-function start(list,name){set=shuffle(list).slice(0,10);idx=0;score=0;label=name;show()}
+function seenCount(i){return stats[i]?stats[i].seen:0}
+// Least-seen first, so every question comes up before any repeats
+function start(list,name){set=shuffle(list).sort((a,b)=>seenCount(a)-seenCount(b)).slice(0,10);idx=0;score=0;label=name;show()}
+
+function renderWeak(){
+  const seen=Q.filter((q,i)=>seenCount(i)>0).length;
+  document.getElementById("seen").textContent=seen+" of "+Q.length+" questions seen";
+  const t={};
+  Q.forEach((q,i)=>{const s=stats[i];if(!s)return;const o=t[q.t]||(t[q.t]={seen:0,right:0});o.seen+=s.seen;o.right+=s.right});
+  const ranked=Object.keys(t).filter(k=>t[k].seen>=3).map(k=>({k,pct:Math.round(t[k].right/t[k].seen*100),n:t[k].seen})).sort((a,b)=>a.pct-b.pct||b.n-a.n);
+  const box=document.getElementById("weak");
+  const answered=Object.values(stats).reduce((n,s)=>n+s.seen,0);
+  if(answered<20||!ranked.length){box.innerHTML=`<p class="wnote">Answer ${Math.max(20-answered,1)} more question${20-answered===1?"":"s"} and your three weakest topics will show here.</p>`;return}
+  const weak=ranked.filter(r=>r.pct<85).slice(0,3);
+  if(!weak.length){box.innerHTML=`<p class="wnote">Every topic you've practiced is at 85% or better. Keep going to cover the rest.</p>`;return}
+  box.innerHTML=weak.map(r=>`<div class="wrow"><span class="tn">${TOPICS[r.k]}</span><span class="tp">${r.pct}%</span><button class="btn" data-topic="${r.k}">Drill</button></div>`).join("")+`<p class="wnote">Look these up in your study guide, then drill them here.</p>`;
+  box.querySelectorAll("[data-topic]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.topic;start(Q.map((q,i)=>i).filter(i=>Q[i].t===k),TOPICS[k]);document.getElementById("stage").scrollIntoView({behavior:"smooth",block:"start"})}));
+}
 
 function show(){
   if(idx>=set.length)return finish();
@@ -302,7 +338,7 @@ function answer(i,k){
   const s=stats[i]||{seen:0,right:0,lastWrong:false};
   s.seen++;if(ok){s.right++;score++}s.lastWrong=!ok;stats[i]=s;save();
   stage.querySelectorAll(".opt").forEach(b=>{b.disabled=true;const bk=+b.dataset.k;if(bk===q.a)b.classList.add("right");else if(bk===k)b.classList.add("wrong")});
-  document.getElementById("after").innerHTML=`<div class="why"><strong style="color:${ok?"var(--good)":"var(--bad)"}">${ok?"Correct":"Not quite"}</strong>${q.w}<div class="hook">Memory hook: ${q.h}</div></div>
+  document.getElementById("after").innerHTML=`<div class="why"><strong style="color:${ok?"var(--good)":"var(--bad)"}">${ok?"Correct":"Not quite"}</strong>${q.w}<div class="hook">Memory hook: ${q.h}</div><div class="hook">Topic: ${TOPICS[q.t]}</div></div>
     <div class="row" style="margin-top:12px"><button class="btn primary" id="next">${idx+1<set.length?"Next question":"See results"}</button></div>`;
   const n=document.getElementById("next");n.addEventListener("click",()=>{idx++;show()});n.focus({preventScroll:true});
   renderBoard();

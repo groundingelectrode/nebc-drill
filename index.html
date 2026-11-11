@@ -60,6 +60,9 @@ button{font:inherit;cursor:pointer}
 .done{text-align:center;align-items:center}
 .big{font-family:var(--display);font-weight:800;font-size:3rem;line-height:1;font-variant-numeric:tabular-nums}
 .foot{color:var(--muted);font-size:.85rem}
+.toprow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.btn.small{padding:5px 12px;font-size:.88rem}
+.ver{color:var(--muted);font-size:.8rem;margin:6px 0 0}
 .weak{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .weak h2{font-family:var(--display);font-size:1.05rem;margin:0;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
 .weak h2 span{font-family:var(--body);font-weight:400;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -76,9 +79,10 @@ button{font:inherit;cursor:pointer}
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Nurse Executive · Board Certified</div>
+    <div class="toprow"><div class="eyebrow">Nurse Executive · Board Certified</div><button class="btn small" id="refresh" title="Load the latest questions">↻ Refresh</button></div>
     <h1>NE-BC Drill</h1>
     <p class="sub">Scenario questions across the four domains of the October 2025 outline. Pick the best answer, then read why.</p>
+    <p class="ver">Version: Nov 10, 2026 · 150 questions</p>
   </header>
 
   <section aria-label="Progress by domain">
@@ -355,6 +359,7 @@ function finish(){
 document.getElementById("m-mix").addEventListener("click",()=>start(Q.map((q,i)=>i),"Mixed"));
 document.querySelectorAll("[data-dom]").forEach(b=>b.addEventListener("click",()=>{const d=b.dataset.dom;start(Q.map((q,i)=>i).filter(i=>Q[i].d===d),DOMAINS[d].name)}));
 document.getElementById("m-miss").addEventListener("click",()=>start(Q.map((q,i)=>i).filter(i=>stats[i]&&stats[i].lastWrong),"Missed"));
+document.getElementById("refresh").addEventListener("click",()=>{try{const u=new URL(location.href);if(u.protocol.startsWith("http")&&u.hostname.endsWith("github.io")){location.replace(u.origin+u.pathname+"?v="+Date.now());return}}catch(e){}location.reload()});
 document.getElementById("reset").addEventListener("click",()=>{document.getElementById("confirm").hidden=false});
 document.getElementById("reset-yes").addEventListener("click",()=>{stats={};save();document.getElementById("confirm").hidden=true;renderBoard()});
 
